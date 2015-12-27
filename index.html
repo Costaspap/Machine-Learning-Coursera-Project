@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="UTF-8">
+    <title>Machine-learning-coursera-project by Costaspap</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <link rel="stylesheet" type="text/css" href="stylesheets/normalize.css" media="screen">
+    <link href='https://fonts.googleapis.com/css?family=Open+Sans:400,700' rel='stylesheet' type='text/css'>
+    <link rel="stylesheet" type="text/css" href="stylesheets/stylesheet.css" media="screen">
+    <link rel="stylesheet" type="text/css" href="stylesheets/github-light.css" media="screen">
+  </head>
+  <body>
+    <section class="page-header">
+      <h1 class="project-name">Machine-learning-coursera-project</h1>
+      <h2 class="project-tagline">A Repository for my project in the Machine Learning class of Coursera&#39;s Data Science Specialization</h2>
+      <a href="https://github.com/Costaspap/Machine-Learning-Coursera-Project" class="btn">View on GitHub</a>
+      <a href="https://github.com/Costaspap/Machine-Learning-Coursera-Project/zipball/master" class="btn">Download .zip</a>
+      <a href="https://github.com/Costaspap/Machine-Learning-Coursera-Project/tarball/master" class="btn">Download .tar.gz</a>
+    </section>
+
+    <section class="main-content">
+      <p>&lt;!DOCTYPE html&gt;</p>
+
+<p></p>
+
+<p></p>
+
+<p>
+
+</p>
+
+<p></p>
+
+<p></p>
+
+<p></p>Weight Lifting Quality Prediction
+
+
+
+<p>
+</p>
+
+
+
+
+
+
+
+code{white-space: pre;}
+
+<p></p>
+
+
+
+
+  pre:not([class]) {
+    background-color: white;
+  }
+
+
+
+
+<p></p>
+
+<p></p>
+
+
+.main-container {
+  max-width: 940px;
+  margin-left: auto;
+  margin-right: auto;
+}
+code {
+  color: inherit;
+  background-color: rgba(0, 0, 0, 0.04);
+}
+img { 
+  max-width:100%; 
+  height: auto; 
+}
+
+
+<div>
+
+
+<div id="header">
+<h1>
+<a id="weight-lifting-quality-prediction" class="anchor" href="#weight-lifting-quality-prediction" aria-hidden="true"><span class="octicon octicon-link"></span></a>Weight Lifting Quality Prediction</h1>
+<h4>
+<a id="konstantinos-papastamos" class="anchor" href="#konstantinos-papastamos" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>Konstantinos Papastamos</em>
+</h4>
+<h4>
+<a id="25-december-2015" class="anchor" href="#25-december-2015" aria-hidden="true"><span class="octicon octicon-link"></span></a><em>25 December 2015</em>
+</h4>
+</div>
+
+<div id="project-description">
+<h3>
+<a id="project-description" class="anchor" href="#project-description" aria-hidden="true"><span class="octicon octicon-link"></span></a>Project Description</h3>
+<p>Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: <a href="http://groupware.les.inf.puc-rio.br/har">http://groupware.les.inf.puc-rio.br/har</a> (see the section on the Weight Lifting Exercise Dataset).</p>
+</div>
+
+<div id="loading-and-preprocessing-the-data">
+<h3>
+<a id="loading-and-preprocessing-the-data" class="anchor" href="#loading-and-preprocessing-the-data" aria-hidden="true"><span class="octicon octicon-link"></span></a>Loading and preprocessing the data</h3>
+<p>First I change the locale to English. Then I download the training and test sets, if not already available.</p>
+<pre><code>Sys.setlocale("LC_ALL","English")</code></pre>
+<pre><code>## [1] "LC_COLLATE=English_United States.1252;LC_CTYPE=English_United States.1252;LC_MONETARY=English_United States.1252;LC_NUMERIC=C;LC_TIME=English_United States.1252"</code></pre>
+<pre><code>require("caret")
+require("data.table")
+
+if(!file.exists("Human_Activity_Training.csv")) {
+  
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",
+  destfile = "Human_Activity_Training.csv")
+  
+}
+
+if(!file.exists("Human_Activity_Testing.csv")) {
+  
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv",
+  destfile = "Human_Activity_Testing.csv")
+  
+}
+
+training = fread("Human_Activity_Training.csv",na.strings=c("NA",""))
+training = as.data.frame(training)
+
+testing = fread("Human_Activity_Testing.csv",na.strings=c("NA",""))
+testing = as.data.frame(testing)</code></pre>
+<p>Now before I continue, some basic transformations must be done, like the removal of features with too many NAs, as they are not going to provide any useful information to the model, as well as the removal of non-numeric features.</p>
+<pre><code>tidy_training=training[,which(as.numeric(colSums(is.na(training)))==0)]
+tidy_testing=testing[,which(as.numeric(colSums(is.na(testing)))==0)]</code></pre>
+<p>We also want to get read of variables 1 to 7 since they are useless for the analysis (they are documentation variables like name, timestamp,indexes etc…)</p>
+<pre><code>tidy_training=tidy_training[,-c(1:7)]
+tidy_testing=tidy_testing[,-c(1:7)]</code></pre>
+</div>
+
+<div id="cross-validation">
+<h3>
+<a id="cross-validation" class="anchor" href="#cross-validation" aria-hidden="true"><span class="octicon octicon-link"></span></a>Cross Validation</h3>
+<p>Now let’s further split the training dataset in training sets and validation sets in order to perform cross validation.</p>
+<pre><code>require(caret)
+set.seed(123123)
+
+row_indexes = 1:nrow(tidy_training)
+
+inTrain1 = sample(row_indexes, round(nrow(tidy_training)/3), replace = FALSE)
+
+train1 = tidy_training[inTrain1,]
+validation1 = tidy_training[-inTrain1,]
+
+inTrain2 = sample(row_indexes[-inTrain1], round(nrow(tidy_training)/3), replace = FALSE)
+
+train2 = tidy_training[inTrain2,]
+validation2 = tidy_training[-inTrain2,]
+
+inTrain3 = sample(row_indexes[-c(inTrain2,inTrain1)], nrow(tidy_training)- 2*round(nrow(tidy_training)/3), replace = FALSE)
+
+train3 = tidy_training[inTrain3,]
+validation3 = tidy_training[-inTrain3,]</code></pre>
+<p>We will use the random forest algorithm with 15 number of trees for each model. The training dataset was split randomly into 3 different parts. Each part will be used as the training set in order to validate the model and estimate the out of sample error using the other two parts as the validation set.</p>
+<p>In the following part I train the models used for cross validation. In order to save time i will include the model objects in my repository so anyone can load it using the load() command instead of running the commands above.</p>
+<pre><code>#Train the three Models
+model1 = train(classe ~ ., data = train1, method = "rf", importance = TRUE, ntrees = 15)
+
+model2 = train(classe ~ ., data = train2, method = "rf", importance = TRUE, ntrees = 15)
+
+model3 = train(classe ~ ., data = train3, method = "rf", importance = TRUE, ntrees = 15)</code></pre>
+<p>And now let’s evaluate the results:</p>
+<pre><code>confusionMatrix(validation1$classe,predict(model1,validation1))</code></pre>
+<pre><code>## Loading required package: randomForest
+## randomForest 4.6-12
+## Type rfNews() to see new features/changes/bug fixes.
+## 
+## Attaching package: 'randomForest'
+## 
+## The following object is masked from 'package:ggplot2':
+## 
+##     margin</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 3670   16    2    1    0
+##          B   64 2484   22    7    0
+##          C    0   18 2259   20    0
+##          D    0    1   54 2080    0
+##          E    0    2    4   25 2352
+## 
+## Overall Statistics
+##                                           
+##                Accuracy : 0.982           
+##                  95% CI : (0.9795, 0.9842)
+##     No Information Rate : 0.2855          
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16       
+##                                           
+##                   Kappa : 0.9772          
+##  Mcnemar's Test P-Value : NA              
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9829   0.9853   0.9650   0.9752   1.0000
+## Specificity            0.9980   0.9912   0.9965   0.9950   0.9971
+## Pos Pred Value         0.9948   0.9639   0.9835   0.9742   0.9870
+## Neg Pred Value         0.9932   0.9965   0.9924   0.9952   1.0000
+## Prevalence             0.2855   0.1927   0.1790   0.1631   0.1798
+## Detection Rate         0.2806   0.1899   0.1727   0.1590   0.1798
+## Detection Prevalence   0.2820   0.1970   0.1756   0.1632   0.1822
+## Balanced Accuracy      0.9904   0.9883   0.9807   0.9851   0.9986</code></pre>
+<pre><code>confusionMatrix(validation2$classe,predict(model2,validation2))</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 3703   17    0    0    2
+##          B   39 2440   12    0    4
+##          C    0   27 2228   11    2
+##          D    0    0   31 2101    5
+##          E    0    2    7   10 2440
+## 
+## Overall Statistics
+##                                          
+##                Accuracy : 0.9871         
+##                  95% CI : (0.985, 0.9889)
+##     No Information Rate : 0.2861         
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16      
+##                                          
+##                   Kappa : 0.9837         
+##  Mcnemar's Test P-Value : NA             
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            0.9896   0.9815   0.9781   0.9901   0.9947
+## Specificity            0.9980   0.9948   0.9963   0.9967   0.9982
+## Pos Pred Value         0.9949   0.9780   0.9824   0.9832   0.9923
+## Neg Pred Value         0.9958   0.9957   0.9954   0.9981   0.9988
+## Prevalence             0.2861   0.1900   0.1741   0.1622   0.1875
+## Detection Rate         0.2831   0.1865   0.1703   0.1606   0.1865
+## Detection Prevalence   0.2845   0.1907   0.1734   0.1634   0.1880
+## Balanced Accuracy      0.9938   0.9882   0.9872   0.9934   0.9965</code></pre>
+<pre><code>confusionMatrix(validation3$classe,predict(model3,validation3))</code></pre>
+<pre><code>## Confusion Matrix and Statistics
+## 
+##           Reference
+## Prediction    A    B    C    D    E
+##          A 3749    0    0    0    0
+##          B    0 2522    0    0    0
+##          C    0    0 2279    0    0
+##          D    0    0    0 2160    0
+##          E    0    0    0    0 2372
+## 
+## Overall Statistics
+##                                      
+##                Accuracy : 1          
+##                  95% CI : (0.9997, 1)
+##     No Information Rate : 0.2866     
+##     P-Value [Acc &gt; NIR] : &lt; 2.2e-16  
+##                                      
+##                   Kappa : 1          
+##  Mcnemar's Test P-Value : NA         
+## 
+## Statistics by Class:
+## 
+##                      Class: A Class: B Class: C Class: D Class: E
+## Sensitivity            1.0000   1.0000   1.0000   1.0000   1.0000
+## Specificity            1.0000   1.0000   1.0000   1.0000   1.0000
+## Pos Pred Value         1.0000   1.0000   1.0000   1.0000   1.0000
+## Neg Pred Value         1.0000   1.0000   1.0000   1.0000   1.0000
+## Prevalence             0.2866   0.1928   0.1742   0.1651   0.1813
+## Detection Rate         0.2866   0.1928   0.1742   0.1651   0.1813
+## Detection Prevalence   0.2866   0.1928   0.1742   0.1651   0.1813
+## Balanced Accuracy      1.0000   1.0000   1.0000   1.0000   1.0000</code></pre>
+<p>As we can see the model has an estimated accuracy over 98%</p>
+</div>
+
+<div id="final-model-and-submission">
+<h3>
+<a id="final-model-and-submission" class="anchor" href="#final-model-and-submission" aria-hidden="true"><span class="octicon octicon-link"></span></a>Final Model and submission</h3>
+<p>Our final model will use the same random forest algorithm, will be trained on the entire training dataset and will be used to predict the 20 requested test cases in the tidy_testing dataset.</p>
+<pre><code>FinalModel = train(classe ~ ., data = tidy_training, method = "rf", importance = TRUE, ntrees = 15)
+
+answers=as.character(predict(FinalModel,tidy_testing))
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answers)</code></pre>
+<pre><code>predict(FinalModel,tidy_testing)</code></pre>
+<pre><code>##  [1] B A B A A E D B A A B C B A E E A B B B
+## Levels: A B C D E</code></pre>
+</div>
+
+<p></p>
+</div>
+
+
+
+
+
+
+
+<p>
+</p>
+
+      <footer class="site-footer">
+        <span class="site-footer-owner"><a href="https://github.com/Costaspap/Machine-Learning-Coursera-Project">Machine-learning-coursera-project</a> is maintained by <a href="https://github.com/Costaspap">Costaspap</a>.</span>
+
+        <span class="site-footer-credits">This page was generated by <a href="https://pages.github.com">GitHub Pages</a> using the <a href="https://github.com/jasonlong/cayman-theme">Cayman theme</a> by <a href="https://twitter.com/jasonlong">Jason Long</a>.</span>
+      </footer>
+
+    </section>
+
+  
+  </body>
+</html>
