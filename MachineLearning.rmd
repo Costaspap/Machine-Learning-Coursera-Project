@@ -1,0 +1,120 @@
+---
+title: "Weight Lifting Quality Prediction"
+author: "Konstantinos Papastamos"
+date: "25 December 2015"
+output: html_document
+---
+###Project Description
+Using devices such as Jawbone Up, Nike FuelBand, and Fitbit it is now possible to collect a large amount of data about personal activity relatively inexpensively. These type of devices are part of the quantified self movement - a group of enthusiasts who take measurements about themselves regularly to improve their health, to find patterns in their behavior, or because they are tech geeks. One thing that people regularly do is quantify how much of a particular activity they do, but they rarely quantify how well they do it. In this project, the goal will be to use data from accelerometers on the belt, forearm, arm, and dumbell of 6 participants. They were asked to perform barbell lifts correctly and incorrectly in 5 different ways. More information is available from the website here: http://groupware.les.inf.puc-rio.br/har (see the section on the Weight Lifting Exercise Dataset). 
+
+
+###Loading and preprocessing the data
+First I change the locale to English. Then I download the training and test sets, if not already available.
+```{r,message=FALSE,warning=FALSE}
+Sys.setlocale("LC_ALL","English")
+require("caret")
+require("data.table")
+
+if(!file.exists("Human_Activity_Training.csv")) {
+  
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-training.csv",
+  destfile = "Human_Activity_Training.csv")
+  
+}
+
+if(!file.exists("Human_Activity_Testing.csv")) {
+  
+  download.file("https://d396qusza40orc.cloudfront.net/predmachlearn/pml-testing.csv",
+  destfile = "Human_Activity_Testing.csv")
+  
+}
+
+training = fread("Human_Activity_Training.csv",na.strings=c("NA",""))
+training = as.data.frame(training)
+
+testing = fread("Human_Activity_Testing.csv",na.strings=c("NA",""))
+testing = as.data.frame(testing)
+```
+
+Now before I continue, some basic transformations must be done, like the removal of features with too many NAs, as they are not going to provide any useful information to the model, as well as the removal of non-numeric features.
+```{r}
+tidy_training=training[,which(as.numeric(colSums(is.na(training)))==0)]
+tidy_testing=testing[,which(as.numeric(colSums(is.na(testing)))==0)]
+```
+We also want to get read of variables 1 to 7 since they are useless for the analysis (they are documentation variables like name, timestamp,indexes etc...)
+```{r}
+tidy_training=tidy_training[,-c(1:7)]
+tidy_testing=tidy_testing[,-c(1:7)]
+```
+
+###Cross Validation
+
+Now let's further split the training dataset in training sets and validation sets in order to perform cross validation.
+```{r}
+require(caret)
+set.seed(123123)
+
+row_indexes = 1:nrow(tidy_training)
+
+inTrain1 = sample(row_indexes, round(nrow(tidy_training)/3), replace = FALSE)
+
+train1 = tidy_training[inTrain1,]
+validation1 = tidy_training[-inTrain1,]
+
+inTrain2 = sample(row_indexes[-inTrain1], round(nrow(tidy_training)/3), replace = FALSE)
+
+train2 = tidy_training[inTrain2,]
+validation2 = tidy_training[-inTrain2,]
+
+inTrain3 = sample(row_indexes[-c(inTrain2,inTrain1)], nrow(tidy_training)- 2*round(nrow(tidy_training)/3), replace = FALSE)
+
+train3 = tidy_training[inTrain3,]
+validation3 = tidy_training[-inTrain3,]
+
+```
+We will use the random forest algorithm with 15 number of trees for each model. The training dataset was split randomly into 3 different parts. Each part will be used as the training set in order to validate the model and estimate the out of sample error using the other two parts as the validation set.
+
+In the following part I train the models used for cross validation. In order to save time i will include the model objects in my repository so anyone can load it using the load() command instead of running the commands above.
+```{r, echo = FALSE}
+load("model1")
+load("model2")
+load("model3")
+load("FinalModel")
+```
+```{r, eval = FALSE}
+#Train the three Models
+model1 = train(classe ~ ., data = train1, method = "rf", importance = TRUE, ntrees = 15)
+
+model2 = train(classe ~ ., data = train2, method = "rf", importance = TRUE, ntrees = 15)
+
+model3 = train(classe ~ ., data = train3, method = "rf", importance = TRUE, ntrees = 15)
+```
+And now let's evaluate the results:
+```{r}
+confusionMatrix(validation1$classe,predict(model1,validation1))
+
+confusionMatrix(validation2$classe,predict(model2,validation2))
+
+confusionMatrix(validation3$classe,predict(model3,validation3))
+```
+As we can see the model has an estimated accuracy over 98% 
+
+###Final Model and submission
+
+Our final model will use the same random forest algorithm, will be trained on the entire training dataset and will be used to predict the 20 requested test cases in the tidy_testing dataset.
+```{r, eval = FALSE}
+FinalModel = train(classe ~ ., data = tidy_training, method = "rf", importance = TRUE, ntrees = 15)
+
+answers=as.character(predict(FinalModel,tidy_testing))
+pml_write_files = function(x){
+  n = length(x)
+  for(i in 1:n){
+    filename = paste0("problem_id_",i,".txt")
+    write.table(x[i],file=filename,quote=FALSE,row.names=FALSE,col.names=FALSE)
+  }
+}
+pml_write_files(answers)
+```
+```{r}
+predict(FinalModel,tidy_testing)
+```
