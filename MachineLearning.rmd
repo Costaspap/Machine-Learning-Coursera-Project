@@ -74,8 +74,9 @@ validation3 = tidy_training[-inTrain3,]
 ```
 We will use the random forest algorithm with 15 number of trees for each model. The training dataset was split randomly into 3 different parts. Each part will be used as the training set in order to validate the model and estimate the out of sample error using the other two parts as the validation set.
 
-In the following part I train the models used for cross validation. In order to save time i will include the model objects in my repository so anyone can load it using the load() command instead of running the commands above.
-```{r, echo = FALSE}
+In the following part I train the models used for cross validation. In order to save time I will include the model objects in my repository so anyone can load it by using the load() command instead of running the train commands below.
+```{r}
+# Download the model objects and load them in order to save time
 load("model1")
 load("model2")
 load("model3")
