@@ -90,7 +90,10 @@ model2 = train(classe ~ ., data = train2, method = "rf", importance = TRUE, ntre
 
 model3 = train(classe ~ ., data = train3, method = "rf", importance = TRUE, ntrees = 15)
 ```
-And now let's evaluate the results:
+
+The random forest algorithm is highly accurate and by cleaning the dataset and using the right features, the out of sample error is expected to be low.
+
+However let's evaluate the results:
 ```{r}
 confusionMatrix(validation1$classe,predict(model1,validation1))
 
@@ -98,7 +101,7 @@ confusionMatrix(validation2$classe,predict(model2,validation2))
 
 confusionMatrix(validation3$classe,predict(model3,validation3))
 ```
-As we can see the model has an estimated accuracy over 98% 
+As we can see the model has an estimated accuracy over 98% , so the out of sample error is indeed very low.
 
 ###Final Model and submission
 

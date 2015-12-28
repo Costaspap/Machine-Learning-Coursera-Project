@@ -129,7 +129,7 @@ inTrain3 = sample(row_indexes[-c(inTrain2,inTrain1)], nrow(tidy_training)- 2*rou
 train3 = tidy_training[inTrain3,]
 validation3 = tidy_training[-inTrain3,]</code></pre>
 <p>We will use the random forest algorithm with 15 number of trees for each model. The training dataset was split randomly into 3 different parts. Each part will be used as the training set in order to validate the model and estimate the out of sample error using the other two parts as the validation set.</p>
-<p>In the following part I train the models used for cross validation. In order to save time I will include the model objects in my repository so anyone can load it using the load() command instead of running the commands above.</p>
+<p>In the following part I train the models used for cross validation. In order to save time I will include the model objects in my repository so anyone can load it by using the load() command instead of running the train commands below.</p>
 <pre class="r"><code># Download the model objects and load them in order to save time
 load(&quot;model1&quot;)
 load(&quot;model2&quot;)
@@ -141,7 +141,8 @@ model1 = train(classe ~ ., data = train1, method = &quot;rf&quot;, importance = 
 model2 = train(classe ~ ., data = train2, method = &quot;rf&quot;, importance = TRUE, ntrees = 15)
 
 model3 = train(classe ~ ., data = train3, method = &quot;rf&quot;, importance = TRUE, ntrees = 15)</code></pre>
-<p>And now let’s evaluate the results:</p>
+<p>The random forest algorithm is highly accurate and by cleaning the dataset and using the right features, the out of sample error is expected to be low.</p>
+<p>However let’s evaluate the results:</p>
 <pre class="r"><code>confusionMatrix(validation1$classe,predict(model1,validation1))</code></pre>
 <pre><code>## Loading required package: randomForest
 ## randomForest 4.6-12
@@ -247,7 +248,7 @@ model3 = train(classe ~ ., data = train3, method = &quot;rf&quot;, importance = 
 ## Detection Rate         0.2851   0.1871   0.1709   0.1585   0.1800
 ## Detection Prevalence   0.2866   0.1928   0.1742   0.1651   0.1813
 ## Balanced Accuracy      0.9942   0.9861   0.9693   0.9935   0.9984</code></pre>
-<p>As we can see the model has an estimated accuracy over 98%</p>
+<p>As we can see the model has an estimated accuracy over 98% , so the out of sample error is indeed very low.</p>
 </div>
 <div id="final-model-and-submission" class="section level3">
 <h3>Final Model and submission</h3>
