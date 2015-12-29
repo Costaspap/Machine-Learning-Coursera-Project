@@ -94,10 +94,10 @@ if(!file.exists(&quot;Human_Activity_Testing.csv&quot;)) {
   
 }
 
-training = fread(&quot;Human_Activity_Training.csv&quot;,na.strings=c(&quot;NA&quot;,&quot;&quot;))
+training = fread(&quot;Human_Activity_Training.csv&quot;)
 training = as.data.frame(training)
 
-testing = fread(&quot;Human_Activity_Testing.csv&quot;,na.strings=c(&quot;NA&quot;,&quot;&quot;))
+testing = fread(&quot;Human_Activity_Testing.csv&quot;)
 testing = as.data.frame(testing)</code></pre>
 <p>Now before I continue, some basic transformations must be done, like the removal of features with too many NAs, as they are not going to provide any useful information to the model, as well as the removal of non-numeric features.</p>
 <pre class="r"><code>tidy_training=training[,which(as.numeric(colSums(is.na(training)))==0)]
