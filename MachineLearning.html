@@ -102,7 +102,7 @@ testing = as.data.frame(testing)</code></pre>
 <p>Now before I continue, some basic transformations must be done, like the removal of features with too many NAs, as they are not going to provide any useful information to the model, as well as the removal of non-numeric features.</p>
 <pre class="r"><code>tidy_training=training[,which(as.numeric(colSums(is.na(training)))==0)]
 tidy_testing=testing[,which(as.numeric(colSums(is.na(testing)))==0)]</code></pre>
-<p>We also want to get read of variables 1 to 7 since they are useless for the analysis (they are documentation variables like name, timestamp,indexes etc…)</p>
+<p>We also want to get rid of variables 1 to 7 since they are useless for the analysis (they are documentation variables like name, timestamp,indexes etc…)</p>
 <pre class="r"><code>tidy_training=tidy_training[,-c(1:7)]
 tidy_testing=tidy_testing[,-c(1:7)]</code></pre>
 </div>
