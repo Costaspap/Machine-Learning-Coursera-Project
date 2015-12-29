@@ -29,10 +29,10 @@ if(!file.exists("Human_Activity_Testing.csv")) {
   
 }
 
-training = fread("Human_Activity_Training.csv",na.strings=c("NA",""))
+training = fread("Human_Activity_Training.csv")
 training = as.data.frame(training)
 
-testing = fread("Human_Activity_Testing.csv",na.strings=c("NA",""))
+testing = fread("Human_Activity_Testing.csv")
 testing = as.data.frame(testing)
 ```
 
